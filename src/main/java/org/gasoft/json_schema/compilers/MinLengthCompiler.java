@@ -1,0 +1,23 @@
+package org.gasoft.json_schema.compilers;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import org.gasoft.json_schema.results.EErrorType;
+import org.gasoft.json_schema.results.IValidationResult;
+
+public class MinLengthCompiler extends BaseLengthCompiler {
+
+    @Override
+    public String getKeyword() {
+        return "minLength";
+    }
+
+    @Override
+    public IValidator compile(JsonNode schemaNode, CompileContext compileContext, IValidationResult.ISchemaLocator schemaLocator) {
+        return super.create(
+                schemaLocator,
+                (expected, actual) -> actual >= expected,
+                EErrorType.MIN_LENGTH,
+                schemaNode
+        );
+    }
+}

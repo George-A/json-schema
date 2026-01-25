@@ -1,0 +1,3 @@
+rootProject.name = 'json-schema'
+include 'tools:buildResources:resources'
+include 'tools:resources'
