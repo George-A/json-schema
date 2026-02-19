@@ -19,10 +19,10 @@ public class EmptyCompilerFactory implements ICompilerFactory{
         return Stream.of(
                 of(Defaults.DRAFT_2020_12_CORE, "$schema", "$comment", "$anchor", "$dynamicAnchor", "$vocabulary"),
                 of(Defaults.DRAFT_2020_12_META_DATA, "title", "description", "deprecated", "readOnly", "writeOnly", "examples", "default"),
-                of(Defaults.DRAFT_2020_12_CONTENT,  "contentEncoding", "contentMediaType", "contentSchema"),
 
                 of(Defaults.DRAFT_2019_09_CORE, "$schema", "$comment", "$anchor", "$recursiveAnchor", "$vocabulary"),
-                of(Defaults.DRAFT_2019_09_META_DATA,"title", "description", "deprecated", "readOnly", "writeOnly", "examples", "default")
+                of(Defaults.DRAFT_2019_09_META_DATA,"title", "description", "deprecated", "readOnly", "writeOnly", "examples", "default"),
+                of(Defaults.DRAFT_07_CORE, "$schema", "title", "description", "readOnly", "writeOnly", "examples", "default", "$comment")
         );
     }
 

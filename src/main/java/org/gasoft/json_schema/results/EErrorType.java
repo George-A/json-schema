@@ -28,9 +28,10 @@ public enum EErrorType {
     TYPE("The node value {0} not conform to type {1}"),
     UNIQUE_ITEMS("At least one item {0} not unique"),
     MAX_LENGTH("The length of {0} must be less than or equal to {1}. Actual: {2}"),
-    MIN_LENGTH("The length of {0} must be greater or equal than  {1}. Actual: {2}")
-
-    ;
+    MIN_LENGTH("The length of {0} must be greater or equal than  {1}. Actual: {2}"),
+    CONTENT_ENCODING("Invalid content encoding {0}."),
+    CONTENT_TYPE("Not conform to content type {0}"),
+    CONTENT_SCHEMA("Not conform to content schema");
     private final String defaultErrorMsg;
 
     EErrorType(String s) {

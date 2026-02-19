@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.gasoft.json_schema.dialects.Dialect;
 import org.gasoft.json_schema.loaders.IReferenceResolver;
 import org.gasoft.json_schema.loaders.SchemasRegistry;
+import org.gasoft.json_schema.results.IValidationResult;
 import org.gasoft.json_schema.results.IValidationResult.ISchemaLocator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.reactivestreams.Publisher;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class CompileContext implements IReferenceResolver {
 
@@ -37,6 +40,10 @@ public class CompileContext implements IReferenceResolver {
 
     public IValidator compile(JsonNode schema, ISchemaLocator schemaPointer) {
         return rootCompiler.compile(schema, this, schemaPointer);
+    }
+
+    public Function<JsonNode, Publisher<IValidationResult>> compileRoot(JsonNode schema) {
+        return rootCompiler.compileSchema(schema, null, compileConfig);
     }
 
     public CompileContext withRegistry(SchemasRegistry registry) {

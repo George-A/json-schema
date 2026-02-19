@@ -27,7 +27,7 @@ public class AdditionalPropertiesCompiler implements INamedCompiler, IValidators
 
     @Override
     public Stream<URI> getVocabularies() {
-        return Stream.of(Defaults.DRAFT_2020_12_APPLICATOR, Defaults.DRAFT_2019_09_APPLICATOR);
+        return Stream.of(Defaults.DRAFT_2020_12_APPLICATOR, Defaults.DRAFT_2019_09_APPLICATOR, Defaults.DRAFT_07_CORE);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class AdditionalPropertiesCompiler implements INamedCompiler, IValidators
     }
 
     @Override
-    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext) {
+    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext, ISchemaLocator locator) {
 
         var current = validators.get(getKeyword());
         if(current == null) {

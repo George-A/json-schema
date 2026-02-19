@@ -1,5 +1,6 @@
 package org.gasoft.json_schema.dialects;
 
+import org.gasoft.json_schema.common.URIUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
@@ -49,6 +50,13 @@ public class DialectRegistry {
                 .forEachVocabulary(vocabularyRegistry::addVocabulary)
                 .build()
         );
+
+        addDialect(
+            new DialectInfoBuilder(DIALECT_07)
+                .addVocabulary(DRAFT_07_CORE)
+                .forEachVocabulary(vocabularyRegistry::addVocabulary)
+                .build()
+        );
     }
 
     @Nullable
@@ -56,13 +64,17 @@ public class DialectRegistry {
         return vocabularyRegistry.optVocabulary(uri);
     }
 
-    private DialectRegistry addDialect(DialectInfo dialectInfo) {
+    private void addDialect(DialectInfo dialectInfo) {
         this.predefined.put(dialectInfo.getUri(), dialectInfo);
-        return this;
     }
 
     @Nullable DialectInfo optDialect(URI dialectUri) {
-        DialectInfo info = predefined.get(dialectUri);
+
+        if(dialectUri == null) {
+            return null;
+        }
+
+        DialectInfo info = predefined.get(URIUtils.clearEmptyFragments(dialectUri));
         if(info != null) {
             return info.copy();
         }

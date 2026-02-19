@@ -21,8 +21,9 @@ public class IdCompiler implements INamedCompiler {
     public Stream<URI> getVocabularies() {
         return Stream.of(
                 Defaults.DRAFT_2020_12_CORE,
-                Defaults.DRAFT_2019_09_CORE
-                );
+                Defaults.DRAFT_2019_09_CORE,
+                Defaults.DRAFT_07_CORE
+        );
     }
 
     @Override
@@ -35,9 +36,17 @@ public class IdCompiler implements INamedCompiler {
         ICompileAction idAction = current.stream()
                 .filter(action -> action.keyword().equals("$id"))
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException("Should`t be happen"));
+                .orElse(null);
 
+        if(idAction == null) {
+            return;
+        }
         String idValue = idAction.schemaNode().textValue();
+        if(compileContext.getDialect(schemaLocator).getURI().equals(Defaults.DIALECT_07)) {
+            if(idValue.startsWith("#")) {
+                return;
+            }
+        }
         ISchemaLocator changeLocator = compileContext.resolveId(idValue, idAction.locator());
         if(changeLocator.getSchemaUUID().equals(schemaLocator.getSchemaUUID())) {
             return;

@@ -23,7 +23,8 @@ public class ExclusiveMaximumCompiler extends BaseNumberCompiler {
     public Stream<URI> getVocabularies() {
         return Stream.of(
                 Defaults.DRAFT_2020_12_VALIDATION,
-                Defaults.DRAFT_2019_09_VALIDATION
+                Defaults.DRAFT_2019_09_VALIDATION,
+                Defaults.DRAFT_07_CORE
         );
     }
 

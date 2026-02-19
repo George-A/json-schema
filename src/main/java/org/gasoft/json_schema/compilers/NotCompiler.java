@@ -25,7 +25,8 @@ public class NotCompiler implements INamedCompiler {
     public Stream<URI> getVocabularies() {
         return Stream.of(
                 Defaults.DRAFT_2020_12_APPLICATOR,
-                Defaults.DRAFT_2019_09_APPLICATOR
+                Defaults.DRAFT_2019_09_APPLICATOR,
+                Defaults.DRAFT_07_CORE
         );
     }
 

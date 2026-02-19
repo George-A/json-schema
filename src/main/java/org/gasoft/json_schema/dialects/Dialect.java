@@ -21,6 +21,10 @@ public class Dialect {
         this.vocabularies = vocabularies;
     }
 
+    public URI getURI() {
+        return dialectInfo.getUri();
+    }
+
     static Dialect create(DialectInfo dialectInfo, Function<URI, Vocabulary> vocabularyResolver) {
         return new Dialect(dialectInfo,
                 dialectInfo.asStream()

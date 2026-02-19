@@ -4,6 +4,22 @@ Here is another implementation of the JSON Schema Draft 2020-12, Draft 2019-09 s
 The main difference in this implementation is its support for multithreading, which significantly 
 speeds up the processing of JSON that contains or consists of large arrays. 
 
+<!-- TOC -->
+* [Json schema implementation](#json-schema-implementation)
+  * [Requirements](#requirements)
+  * [How it works](#how-it-works)
+  * [Features](#features)
+  * [Usage](#usage)
+    * [Simple schema validation](#simple-schema-validation)
+    * [Define own resource loaders](#define-own-resource-loaders)
+    * [Resolve schema references to concrete URI or concrete schema](#resolve-schema-references-to-concrete-uri-or-concrete-schema)
+    * [Resolving reference to uri](#resolving-reference-to-uri)
+    * [Define custom format validators](#define-custom-format-validators)
+    * [Content validation features](#content-validation-features)
+  * [Define custom regular expression dialect](#define-custom-regular-expression-dialect)
+  * [Concurrency](#concurrency)
+  * [Limitations](#limitations)
+<!-- TOC -->
 
 ## Requirements
 Java 21
@@ -154,6 +170,94 @@ Example of resolving a link to an absolute URI and subsequent loading using the 
 
         assertTrue(result.isOk;
 ```
+
+### Define custom format validators
+You can add custom or replace existing (default) format validators
+```java
+        String schema = """
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "format": "thousandNumber"
+                }
+                """;
+        Schema schemaInst = SchemaBuilder.create()
+                .setDraft202012DefaultDialect()
+                .setFormatAssertionsEnabled(true)
+                .addFormatValidator("thousandNumber", str -> str.equals("1000"))
+                .compile(schema);
+        
+        assertTrue(schemaInst.apply("\"1000\"").isOk());
+        
+        assertFalse(schemaInst.apply("\"1001\"").isOk());
+```
+### Content validation features
+In the Draft7 specification, validation of contentEncoding and contentMediaType keywords is enabled by default. 
+In contrast, in the Draft2019 and Draft2020 specifications, it is disabled. The following option has been added to control this behavior.
+
+The library defines four levels of keyword processing behavior from the Content vocabulary:
+
+| Level    | Draft7                   | Draft2019+                                                |
+|----------|--------------------------|-----------------------------------------------------------|
+| DISABLED | All validations disabled | All validations disabled                                  |
+| DEFAULT  | All validations applied  | All validations disabled                                  |  
+| ENCODING | All validations applied  | All validation applyed, but contentSchema not checked     |  
+| ENCODING_AND_SCHEMA | All validations applied  | All validations are applied and contentSchema is checked. |
+
+More explained in example:
+```java
+String schema = """
+                {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "contentEncoding": "base64",
+                "contentMediaType": "application/json",
+                "contentSchema": {
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "type": "string"
+                    }
+                }
+                """;
+        String invalidEncoding = "\"MQ!==\""; // Symbol ! not allowed
+        String validEncoding = "\"MQ==\""; // base64 encoded integer 1
+        String validEncodingAndSchema = "\"IjEi\""; // base64 encoded string "1"
+
+        // Behavior for disabled validations and invalid data
+        IValidationResult result = SchemaBuilder.create()
+                .setContentVocabularyBehavior(IContentProcessing.ContentValidationLevel.DISABLE)
+                .compile(schema)
+                .apply(validEncoding);
+        // Validations do not apply 
+        assertTrue(result.isOk());
+
+        // Behavior for validating contentEncoding and contentMediaType
+        Schema compiledSchema = SchemaBuilder.create()
+                .setContentVocabularyBehavior(IContentProcessing.ContentValidationLevel.ENCODING)
+                .compile(schema);
+
+        // The base64 encoding is invalid
+        result = compiledSchema.apply(invalidEncoding);
+        assertFalse(result.isOk());
+
+        // The base64 encoding is valid
+        result = compiledSchema.apply(validEncoding);
+        assertTrue(result.isOk());
+
+        // Behavior for validating contentEncoding and contentMediaType and contentSchema too
+        compiledSchema = SchemaBuilder.create()
+                .setContentVocabularyBehavior(IContentProcessing.ContentValidationLevel.ENCODING_AND_SCHEMA)
+                .compile(schema);
+
+        // Valid base64 encoding but value not conform to contentSchema
+        result = compiledSchema.apply(validEncoding);
+        assertFalse(result.isOk());
+
+        // Valid base64 encoding and  value is conform to contentSchema
+        result = compiledSchema.apply(validEncodingAndSchema);
+        assertTrue(result.isOk());
+```
+Builtin support for contentEncoding types: base64, quoted-printable, 7bit.
+Builtin support for json evaluable contentMediaType
+
+Also you can add or redefined validators for contentEncoding and contentMediaType schema values. 
 
 ## Define custom regular expression dialect
 This library does not support ECMA-262 regular expressions. By default, it uses the jdk 21 standard, 

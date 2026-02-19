@@ -1,5 +1,8 @@
 package org.gasoft.json_schema.compilers;
 
+import org.gasoft.json_schema.compilers.ICompiler.IValidatorAction;
+import org.gasoft.json_schema.results.IValidationResult;
+
 import java.util.Map;
 
 public interface IValidatorsTransformer {
@@ -8,5 +11,5 @@ public interface IValidatorsTransformer {
     default int getOrder() {
         return 0;
     }
-    void transform(Map<String, ICompiler.IValidatorAction> validators, CompileContext compileContext);
+    void transform(Map<String, IValidatorAction> validators, CompileContext compileContext, IValidationResult.ISchemaLocator locator);
 }

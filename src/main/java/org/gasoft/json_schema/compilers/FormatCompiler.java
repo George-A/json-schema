@@ -33,7 +33,12 @@ public class FormatCompiler implements INamedCompiler {
 
     @Override
     public Stream<URI> getVocabularies() {
-        return Stream.of(Defaults.DRAFT_2020_12_FORMAT_ANNOTATION, Defaults.DRAFT_2020_12_FORMAT_ASSERTION, Defaults.DRAFT_2019_09_FORMAT);
+        return Stream.of(
+                Defaults.DRAFT_2020_12_FORMAT_ANNOTATION,
+                Defaults.DRAFT_2020_12_FORMAT_ASSERTION,
+                Defaults.DRAFT_2019_09_FORMAT,
+                Defaults.DRAFT_07_CORE
+        );
     }
 
     @Override
@@ -45,36 +50,43 @@ public class FormatCompiler implements INamedCompiler {
             return null;
         }
 
-        Predicate<String> predicate = switch(schemaNode.textValue()) {
-            case "date"             -> DateTimeFormatValidation::validateDate;
-            case "time"             -> DateTimeFormatValidation::validateTime;
-            case "date-time"        -> DateTimeFormatValidation::validateDateTime;
-            case "duration"         -> DateTimeFormatValidation::validateDuration;
-            case "regex"            -> str -> validateRegex(str, compileContext);
-            case "uuid"             -> CommonFormatValidations.getUUIDFormatValidator();
-            case "uri"              -> CommonFormatValidations.getURIValidator();
-            case "uri-reference"    -> CommonFormatValidations.getURIReferenceValidator();
-            case "ipv4"             -> CommonFormatValidations.getIpv4Validator();
-            case "ipv6"             -> CommonFormatValidations.getIpv6Validator();
-            case "uri-template"     -> URITemplateParser::parse;
-            case "json-pointer"     -> CommonFormatValidations.getJsonPointerValidator();
+        Predicate<String> predicate = compileContext.getConfig().getFormats().get(schemaNode.textValue());
+        if(predicate == null) {
+            predicate = getDefaultFormats(schemaNode, compileContext, schemaLocator);
+        }
+        if(predicate != null) {
+            return new FormatValidator(schemaNode.textValue(), schemaLocator, predicate);
+        }
+        return null;
+    }
+
+    private static Predicate<String> getDefaultFormats(JsonNode schemaNode, CompileContext compileContext, IValidationResult.ISchemaLocator schemaLocator) {
+        return switch (schemaNode.textValue()) {
+            case "date" -> DateTimeFormatValidation::validateDate;
+            case "time" -> DateTimeFormatValidation::validateTime;
+            case "date-time" -> DateTimeFormatValidation::validateDateTime;
+            case "duration" -> DateTimeFormatValidation::validateDuration;
+            case "regex" -> str -> validateRegex(str, compileContext);
+            case "uuid" -> CommonFormatValidations.getUUIDFormatValidator();
+            case "uri" -> CommonFormatValidations.getURIValidator();
+            case "uri-reference" -> CommonFormatValidations.getURIReferenceValidator();
+            case "ipv4" -> CommonFormatValidations.getIpv4Validator();
+            case "ipv6" -> CommonFormatValidations.getIpv6Validator();
+            case "uri-template" -> URITemplateParser::parse;
+            case "json-pointer" -> CommonFormatValidations.getJsonPointerValidator();
             case "relative-json-pointer" -> CommonFormatValidations.getRelativeJsonPointerValidator();
-            case "iri"              -> CommonFormatValidations.getIriValidator();
-            case "iri-reference"    -> CommonFormatValidations.getIriReferenceValidator();
-            case "email" , "idn-email" -> EmailValidator.getInstance(true, false)::isValid;
-            case "hostname"         -> HostnameValidator.getHostNameValidator();
-            case "idn-hostname"     -> HostnameValidator.getIDNAHostnameValidator();
+            case "iri" -> CommonFormatValidations.getIriValidator();
+            case "iri-reference" -> CommonFormatValidations.getIriReferenceValidator();
+            case "email", "idn-email" -> EmailValidator.getInstance(true, false)::isValid;
+            case "hostname" -> HostnameValidator.getHostNameValidator();
+            case "idn-hostname" -> HostnameValidator.getIDNAHostnameValidator();
             default -> {
-                if(compileContext.getDialect(schemaLocator).isAssertionRequired()) {
+                if (compileContext.getDialect(schemaLocator).isAssertionRequired()) {
                     throw create(schemaLocator, "The format {0} not supported", schemaNode);
                 }
                 yield null;
             }
         };
-        if(predicate != null) {
-            return new FormatValidator(schemaNode.textValue(), schemaLocator, predicate);
-        }
-        return null;
     }
 
     protected static class FormatValidator implements IValidator {

@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 public class TestUtils {
 
-    static JsonMapper mapper = new JsonMapper();
+    static final JsonMapper mapper = new JsonMapper();
 
     public static List<Path> getPathsFromDir(Path folderPath, Predicate<Path> filter, int depth) {
 

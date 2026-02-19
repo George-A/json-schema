@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IntRangeMapTest {
 
-    RangeCollections.IntRangeMap<Integer> map = new RangeCollections.IntRangeMap<Integer>();
+    RangeCollections.IntRangeMap<Integer> map = new RangeCollections.IntRangeMap<>();
 
     @BeforeEach
     void setUp() {

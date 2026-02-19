@@ -63,6 +63,8 @@ public class CommonCompilersFactory {
                 .addCompiler(new FormatCompiler())
                 .addCompiler(new AdditionalItemsCompiler())
                 .addCompiler(new RecursiveRefCompiler())
+                .addCompiler(new DefinitionsCompiler())
+                .addCompiler(new ContentTypesCompilerFactory())
         ;
     }
 

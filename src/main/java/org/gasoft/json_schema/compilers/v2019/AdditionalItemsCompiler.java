@@ -28,7 +28,10 @@ public class AdditionalItemsCompiler implements INamedCompiler, IValidatorsTrans
 
     @Override
     public Stream<URI> getVocabularies() {
-        return Stream.of(Defaults.DRAFT_2019_09_APPLICATOR);
+        return Stream.of(
+                Defaults.DRAFT_2019_09_APPLICATOR,
+                Defaults.DRAFT_07_CORE
+        );
     }
 
     @Override
@@ -42,7 +45,7 @@ public class AdditionalItemsCompiler implements INamedCompiler, IValidatorsTrans
     }
 
     @Override
-    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext) {
+    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext, IValidationResult.ISchemaLocator locator) {
         var current = validators.remove(getKeyword());
         if(current == null) {
             return;

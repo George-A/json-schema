@@ -4,55 +4,49 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.gasoft.json_schema.TestUtils;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class JsonSchemaTestDataProvider {
 
     static final Path testDirectory = Path.of(System.getProperty("user.dir") +"/test_sources/tests/");
 
-    static Stream<TestFile> getTestFiles() {
-        return TestUtils.getPathsFromDir(testDirectory, ignore -> true, Integer.MAX_VALUE)
-                .stream()
-                .map(path -> new TestFile(
-                        path,
-                        testDirectory.relativize(path),
-                        toSchema(path).toList(),
-                        testDirectory.relativize(path)
-                ));
-    }
-
-    static TestFile toTestFile(Path parent, Path path) {
-        return new TestFile(path, parent.relativize(path), toSchema(path).toList(), testDirectory.relativize(path));
+    static TestFile toTestFile(Path parent, TestUtils.IFile iFile) {
+        var testFile = new TestFile(iFile, iFile.path(), parent.relativize(iFile.path()), new ArrayList<>(), testDirectory.relativize(iFile.path()));
+        toSchema(testFile, iFile.path()).forEach(testFile.schemas::add);
+        return testFile;
     }
 
     static List<TestUtils.IFile> getFilesHierarchy() {
         return TestUtils.getPathsHierarchy(testDirectory, ignore -> true);
     }
 
-    public static Stream<Schema> toSchema(Path path) {
+    public static Stream<Schema> toSchema(TestFile testFile, Path path) {
         return TestUtils.loadJson(path.toFile())
                     .valueStream()
                     .map(schema -> {
-                        var tests = schema.get("tests")
+                        var schemaObj = new Schema(
+                                testFile,
+                                schema.get("schema"),
+                                schema.get("description").asText(),
+                                new ArrayList<>()
+                        );
+                        schema.get("tests")
                                 .valueStream()
                                 .map(test -> new Test(
+                                        schemaObj,
                                         test.get("description").asText(),
                                         test.get("data"),
                                         test.get("valid").asBoolean()
                                 ))
-                                .toList();
-                        return new Schema(
-                                schema.get("schema"),
-                                schema.get("description").asText(),
-                                tests
-                        );
+                                .forEach(schemaObj.tests::add);
+                        return schemaObj;
                     });
     }
 
-    record Test(String description, JsonNode value, boolean expected){
+    record Test(Schema schema, String description, JsonNode value, boolean expected){
 
         @Override
         public String toString() {
@@ -64,7 +58,7 @@ public class JsonSchemaTestDataProvider {
         }
     }
 
-    record Schema(JsonNode schemaValue, String description, Collection<Test> tests){
+    public record Schema(TestFile testFile, JsonNode schemaValue, String description, Collection<Test> tests){
 
         @Override
         public String toString() {
@@ -75,11 +69,10 @@ public class JsonSchemaTestDataProvider {
         }
     }
 
-    record TestFile(Path file, Path relativePath, Collection<Schema> schemas, Path rootRelativePath) {
+    public record TestFile(TestUtils.IFile iFile, Path file, Path relativePath, Collection<Schema> schemas, Path rootRelativePath) {
         @Override
         public String toString() {
             return relativePath.toString();
         }
     }
-
 }

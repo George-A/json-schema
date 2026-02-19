@@ -1,8 +1,14 @@
 package org.gasoft.json_schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.gasoft.json_schema.IContentProcessing.ContentValidationLevel;
 import org.gasoft.json_schema.common.JsonUtils;
+import org.gasoft.json_schema.common.content.IContentValidationRegistry.ExceptionableCons;
+import org.gasoft.json_schema.common.content.IContentValidationRegistry.ExceptionableOp;
+import org.gasoft.json_schema.common.content.MimeType;
+import org.gasoft.json_schema.common.content.SimpleContentValidationRegistry;
 import org.gasoft.json_schema.compilers.CompileConfig;
+import org.gasoft.json_schema.common.content.MimeTypeValidator;
 import org.gasoft.json_schema.compilers.Compiler;
 import org.gasoft.json_schema.dialects.Defaults;
 import org.gasoft.json_schema.loaders.ExternalResolversHelper;
@@ -11,11 +17,10 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -30,6 +35,10 @@ public class SchemaBuilder {
     private Scheduler scheduler;
     private final List<IResourceLoader> resourceLoaders = new ArrayList<>(1);
     private IRegexPredicateFactory regexPredicateFactory;
+    private final Map<String, Predicate<String>> formatValidators = new HashMap<>();
+    private ContentValidationLevel contentValidationLevel = ContentValidationLevel.DEFAULT;
+    private final SimpleContentValidationRegistry contentValidationRegistry = new SimpleContentValidationRegistry();
+
 
     private SchemaBuilder() {
     }
@@ -63,6 +72,10 @@ public class SchemaBuilder {
      */
     public SchemaBuilder setDraft202009DefaultDialect() {
         return setDefaultDialect(Defaults.DIALECT_2020_12);
+    }
+
+    public SchemaBuilder setDraft07DefaultDialect() {
+        return setDefaultDialect(Defaults.DIALECT_07);
     }
 
     /**
@@ -115,6 +128,48 @@ public class SchemaBuilder {
      */
     public SchemaBuilder setTryCastToArray(boolean tryCastToArray) {
         allowTreatAsArray = tryCastToArray;
+        return this;
+    }
+
+    /**
+     * Setup validation level of contentXXX keywords. Default: {@link  ContentValidationLevel#DEFAULT}
+     *
+     * @param contentValidationLevel content validation level.
+     * @return this
+     * @see ContentValidationLevel
+     */
+    public SchemaBuilder setContentVocabularyBehavior(ContentValidationLevel contentValidationLevel) {
+        this.contentValidationLevel = contentValidationLevel;
+        return this;
+    }
+
+    /**
+     * Add custom or replace default contentEncoding keyword validator. The {@code validator} can throws Exception
+     * on invalid validation and must return valid decoded instance value if contentMediaType validation is implied.
+     * @param encodingType then content type name case-insensitive
+     * @param validator the validator. The function receives encoded value and returns decoded value or throwing an Exception
+     *                  if value encoding is invalid
+     * @return this
+     * @throws NullPointerException is any of arguments is null
+     */
+    public SchemaBuilder addContentEncodingValidator(String encodingType, ExceptionableOp validator) {
+        Objects.requireNonNull(encodingType, "The encodingType is null");
+        Objects.requireNonNull(validator, "The validator is null");
+        contentValidationRegistry.addContentEncodingValidator(encodingType, validator);
+        return this;
+    }
+
+    /**
+     * Add custom or replace existing contentMediaType validator.
+     * @param mimeTypePredicate predicate for selecting validator by mime type. More here {@link MimeType}
+     * @param validator the consumer which must throwing an exception if validation is failed
+     * @return this
+     * @throws NullPointerException if any of arguments is null
+     */
+    public SchemaBuilder addContentMediaTypeValidator(Predicate<MimeType> mimeTypePredicate, ExceptionableCons validator) {
+        Objects.requireNonNull(mimeTypePredicate, "The mime type predicate is null");
+        Objects.requireNonNull(validator, "The validator is null");
+        contentValidationRegistry.addContentTypeValidator(new MimeTypeValidator(mimeTypePredicate, validator));
         return this;
     }
 
@@ -208,6 +263,32 @@ public class SchemaBuilder {
     }
 
     /**
+     * Add custom or replace existing format validator
+     * @param formatName format name
+     * @param formatValidator format validator
+     * @return this
+     * @throws NullPointerException if any or arguments is null
+     */
+    public SchemaBuilder addFormatValidator(String formatName, Predicate<String> formatValidator) {
+        Objects.requireNonNull(formatName, "The formatName is null");
+        Objects.requireNonNull(formatValidator, "The formatValidator is null");
+        this.formatValidators.put(formatName, formatValidator);
+        return this;
+    }
+
+    /**
+     * Mass add format validators.
+     * @param formatValidators format validators
+     * @return this
+     * @throws  NullPointerException if {@code formatValidators} is null or any key or value at this map is null
+     */
+    public SchemaBuilder addFormatValidators(Map<String, Predicate<String>> formatValidators) {
+        Objects.requireNonNull(formatValidators, "The formatValidators is null");
+        formatValidators.forEach(this::addFormatValidator);
+        return this;
+    }
+
+    /**
      * Set scheduler for parallel validation
      * @param scheduler scheduler
      * @return this
@@ -255,6 +336,9 @@ public class SchemaBuilder {
                         .setRegexpFactory(regexPredicateFactory)
                         .setScheduler(scheduler)
                         .setFormatEnabled(formatEnabled)
+                        .setContentValidationLevel(contentValidationLevel)
+                        .addFirstContentValidationRegistry(this.contentValidationRegistry)
+                        .addFormatValidators(this.formatValidators)
                 );
         return new Schema(validateFunc);
     }

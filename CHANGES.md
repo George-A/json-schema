@@ -6,3 +6,11 @@
     <details>
       - Remove guava library from dependencies
     </details>
+
+* **1.2.0** Added Draft 7 spec implementation
+   <details>
+      - Add support for Content vocabulary (Draft7+)
+      - Add support for add or redefine custom format validators
+      - Add support for add or redefine custom contentEncoding validator
+      - Add support for add or redefine custom contentMediaType validator
+   </details>

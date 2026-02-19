@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import static org.gasoft.json_schema.common.LocatedSchemaCompileException.checkIt;
 import static org.gasoft.json_schema.compilers.CompilerRegistry.VocabularySupport.of;
 
+@SuppressWarnings("ALL")
 public class ContainsCompilerFactory implements ICompilerFactory {
     @Override
     public Stream<IVocabularySupport> getSupportedKeywords() {
@@ -27,7 +28,8 @@ public class ContainsCompilerFactory implements ICompilerFactory {
                 of(Defaults.DRAFT_2020_12_APPLICATOR, "contains"),
                 of(Defaults.DRAFT_2020_12_VALIDATION, "minContains", "maxContains"),
                 of(Defaults.DRAFT_2019_09_APPLICATOR, "contains"),
-                of(Defaults.DRAFT_2019_09_VALIDATION, "minContains", "maxContains")
+                of(Defaults.DRAFT_2019_09_VALIDATION, "minContains", "maxContains"),
+                of(Defaults.DRAFT_07_CORE, "contains")
         );
     }
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.gasoft.json_schema.compilers.ICompiler;
+import org.gasoft.json_schema.dialects.Defaults;
 import org.gasoft.json_schema.dialects.Dialect;
 import org.gasoft.json_schema.loaders.SchemaInfo.SubSchemaInfo;
 import org.jspecify.annotations.NonNull;
@@ -29,7 +30,6 @@ public class SchemaPreprocessor {
     }
 
     public URI resolveId(@NonNull String idValue, @Nullable URI parentId) {
-        // todo Resolve relative ids with authoring part
         // optional/refOfUnknownKeyword.json - "reference of an arbitrary keyword of a sub-schema with encoded ref"
         URI idUri = URI.create(idValue);
         checkIt(idUri.getFragment() == null || idUri.getFragment().isEmpty(), "The id {0} can`t contains fragment", idUri);
@@ -44,10 +44,27 @@ public class SchemaPreprocessor {
         return idUri;
     }
 
-    private Optional<String> optId(JsonNode node) {
+    private Optional<String> optId(JsonNode node, URI dialect) {
         return Optional.of(node.path("$id"))
                 .filter(JsonNode::isTextual)
-                .map(JsonNode::textValue);
+                .map(JsonNode::textValue)
+                .filter(id -> isValidIdInEarlyVersions(dialect, node, id));
+    }
+
+    private boolean isValidIdInEarlyVersions(URI dialect, JsonNode node, String idValue) {
+        if(dialect.equals(Defaults.DIALECT_07)) {
+            if(hasRef(node)) {
+                return false;
+            }
+            if(idValue.startsWith("#")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasRef(JsonNode node) {
+        return !node.path("$ref").isMissingNode();
     }
 
     public class SchemaProcessingResult {
@@ -86,6 +103,15 @@ public class SchemaPreprocessor {
             SubSchemaInfo subSchema = getSubSchema(parentId, pointer);
             JsonPointer relative = childToRelative(subSchema.absolutePointer(), pointer);
             checkIt(subSchema.anchors().put(node.textValue(), relative) == null, "The anchor {0} already exists", node);
+        }
+
+        private void onNewPlainId(JsonNode node, JsonPointer pointer, URI parentId) {
+            checkIt(node.isTextual(), "The plain $id must be an string. Actual: {0}", node);
+            checkIt(node.textValue().length() > 1, "The empty plain $id");
+
+            SubSchemaInfo subSchema = getSubSchema(parentId, pointer);
+            JsonPointer relative = childToRelative(subSchema.absolutePointer(), pointer);
+            checkIt(subSchema.anchors().put(node.textValue().substring(1), relative) == null, "The plain $id {0} already exists", node);
         }
 
         private SubSchemaInfo getSubSchema(URI parentId, JsonPointer pointer) {
@@ -139,6 +165,11 @@ public class SchemaPreprocessor {
         }
 
         @Override
+        public URI getDialect() {
+            return schemaProcessingResult.dialect.getURI();
+        }
+
+        @Override
         public void process(JsonPointer pointer) {
             PreprocessorMediator mediator = new PreprocessorMediator(schema, schemaProcessingResult, parentId, parentSubSchema);
             mediator.processImpl(pointer);
@@ -151,7 +182,7 @@ public class SchemaPreprocessor {
             }
             ObjectNode obj = (ObjectNode) node;
 
-            optId(obj)
+            optId(obj, getDialect())
                     .ifPresent(
                             idValue -> {
                                 var idResult = schemaProcessingResult.onNewId(idValue, pointer, parentId, node, parentSubSchema);
@@ -160,6 +191,13 @@ public class SchemaPreprocessor {
                                 obj.set("$id", TextNode.valueOf(parentId.toString()));
                             }
                     );
+
+            if(schemaProcessingResult.dialect.getURI().equals(Defaults.DIALECT_07)) {
+                JsonNode id = node.path("$id");
+                if(!id.isMissingNode() && id.textValue().startsWith("#")) {
+                    schemaProcessingResult.onNewPlainId(id, pointer, parentId);
+                }
+            }
 
             if(schemaProcessingResult.dialect.optCompiler("$anchor") != null) {
                 var anchor = node.path("$anchor");

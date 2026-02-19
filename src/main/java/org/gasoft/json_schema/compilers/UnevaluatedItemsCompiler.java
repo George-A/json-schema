@@ -52,7 +52,7 @@ public class UnevaluatedItemsCompiler implements INamedCompiler, IValidatorsTran
     }
 
     @Override
-    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext) {
+    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext, IValidationResult.ISchemaLocator locator) {
         IValidatorAction current = validators.get(getKeyword());
         if (current == null) {
             return;

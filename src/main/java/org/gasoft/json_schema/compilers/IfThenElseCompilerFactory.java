@@ -23,7 +23,8 @@ public class IfThenElseCompilerFactory implements ICompilerFactory, IValidatorsT
     public Stream<IVocabularySupport> getSupportedKeywords() {
         return Stream.of(
                 CompilerRegistry.VocabularySupport.of(Defaults.DRAFT_2020_12_APPLICATOR, "if", "then", "else"),
-                CompilerRegistry.VocabularySupport.of(Defaults.DRAFT_2019_09_APPLICATOR, "if", "then", "else")
+                CompilerRegistry.VocabularySupport.of(Defaults.DRAFT_2019_09_APPLICATOR, "if", "then", "else"),
+                CompilerRegistry.VocabularySupport.of(Defaults.DRAFT_07_CORE, "if", "then", "else")
         );
     }
 
@@ -36,7 +37,7 @@ public class IfThenElseCompilerFactory implements ICompilerFactory, IValidatorsT
     }
 
     @Override
-    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext) {
+    public void transform(Map<String, IValidatorAction> validators, CompileContext compileContext, IValidationResult.ISchemaLocator locator) {
         var thenValidator = validators.remove("then");
         var elseValidator = validators.remove("else");
         var ifValidator = validators.remove("if");

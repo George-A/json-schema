@@ -54,7 +54,7 @@ public class ExternalSchemaResolverTest {
     @Nested
     public class TestWithRemotes {
 
-        TestServer server = new TestServer();
+        final TestServer server = new TestServer();
         String content;
 
         @BeforeEach

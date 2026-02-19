@@ -8,6 +8,7 @@ import org.gasoft.json_schema.results.IValidationResult.IValidationId;
 import org.gasoft.json_schema.results.ValidationResultFactory;
 import org.jspecify.annotations.Nullable;
 
+import java.net.URI;
 import java.util.List;
 
 public interface ICompiler {
@@ -16,6 +17,9 @@ public interface ICompiler {
     IValidator compile(JsonNode schemaNode, CompileContext compileContext, ISchemaLocator schemaLocator);
 
     default void resolveCompilationOrder(List<ICompileAction> current, CompileContext compileContext, ISchemaLocator schemaLocator) {}
+    default int resolveOperationOrderSort() {
+        return 0;
+    }
 
     default boolean isSaveCompilerToCompileContext() {
         return false;
@@ -40,9 +44,10 @@ public interface ICompiler {
         ICompileAction compileAction();
     }
 
-
     interface IPreprocessorMediator {
 
         void process(JsonPointer pointer);
+
+        URI getDialect();
     }
 }

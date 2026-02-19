@@ -7,10 +7,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class SchemaInfo {
 
@@ -82,6 +79,15 @@ public class SchemaInfo {
 
     public @Nullable UUID resolveSubSchema(JsonPointer pointer) {
         return subschemas.get(pointer.toString());
+    }
+
+    public UUID findNearestSubschema(String pointer) {
+        return this.subschemas.keySet().stream()
+                .filter(pointer::startsWith)
+                .sorted(Comparator.comparing(String::length).reversed())
+                .map(subschemas::get)
+                .findAny()
+                .orElse(null);
     }
 
     public boolean hasRecursiveAnchor() {

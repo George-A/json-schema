@@ -195,11 +195,10 @@ public class RangeCollections {
 
         @Override
         public String toString() {
-            String sb = "IntRangeSet{" + this.map.values().stream()
+            return "IntRangeSet{" + this.map.values().stream()
                     .map(Range::toString)
                     .collect(Collectors.joining(",")) +
                     '}';
-            return sb;
         }
     }
 

@@ -7,6 +7,7 @@ import org.gasoft.json_schema.results.IValidationResult.ISchemaLocator;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.gasoft.json_schema.common.LocatedSchemaCompileException.checkIt;
@@ -21,7 +22,11 @@ public class RefCompiler implements INamedCompiler {
 
     @Override
     public Stream<URI> getVocabularies() {
-        return Stream.of(Defaults.DRAFT_2020_12_CORE, Defaults.DRAFT_2019_09_CORE);
+        return Stream.of(
+                Defaults.DRAFT_2020_12_CORE,
+                Defaults.DRAFT_2019_09_CORE,
+                Defaults.DRAFT_07_CORE
+        );
     }
 
     @Override
@@ -39,5 +44,24 @@ public class RefCompiler implements INamedCompiler {
                 getKeyword(), result);
 
         return  compileContext.compile(navigatedToPtr, locator);
+    }
+
+    @Override
+    public int resolveOperationOrderSort() {
+        return -1;
+    }
+
+    @Override
+    public void resolveCompilationOrder(List<ICompileAction> current, CompileContext compileContext, ISchemaLocator schemaLocator) {
+        if(compileContext.getDialect(schemaLocator).getURI().equals(Defaults.DIALECT_07)) {
+            ICompileAction refAction = current.stream()
+                    .filter(action -> action.keyword().equals(getKeyword()))
+                    .findAny()
+                    .orElse(null);
+            if(refAction != null) {
+                current.clear();
+                current.add(refAction);
+            }
+        }
     }
 }

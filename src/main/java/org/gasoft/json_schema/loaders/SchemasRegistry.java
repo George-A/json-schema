@@ -219,8 +219,28 @@ public class SchemasRegistry implements IReferenceResolver {
             return resolvePath(resolution.getPath(), schemaLocator);
         }
         else {
+            var schemaInfo = content.get(schemaLocator.getSchemaUUID());
+            if(resolution.hasFragment()) {
+                return findNearestSchema(schemaInfo, resolution, schemaLocator);
+            }
             return content.get(schemaLocator.getSchemaUUID());
         }
+    }
+
+    /*
+    When accessing via the $ref link, in the nested $defs, each of which has its own $id, the current $id should be resolved.
+     */
+    private SchemaInfo findNearestSchema(SchemaInfo schemaInfo, RefResolutionResult resolution, ISchemaLocator schemaLocator) {
+        UUID uuid = schemaInfo.findNearestSubschema(resolution.getFragment());
+        if(uuid != null) {
+            // Resolve subschema
+            SchemaInfo schema = content.get(uuid);
+            String pointer = schema.getPointerOfRoot().toString();
+            String modifiedFragment = resolution.getFragment().substring(pointer.length());
+            resolution.modifyFragment(modifiedFragment);
+            return schema;
+        }
+        return schemaInfo;
     }
 
     private @Nullable IResolutionResult tryResolveRef(RefResolutionResult resolution, ISchemaLocator schemaLocator) {
@@ -419,6 +439,12 @@ public class SchemasRegistry implements IReferenceResolver {
 
         private String getFragment() {
             return parts[1];
+        }
+
+        private void modifyFragment(String modified) {
+            if(hasFragment()) {
+                this.parts[1] = modified;
+            }
         }
     }
 }

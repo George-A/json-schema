@@ -92,7 +92,7 @@ public class Compiler {
         compileContext.getDialect(schemaLocator)
                 .getTransformers()
                 .sorted(Comparator.comparing(IValidatorsTransformer::getOrder))
-                .forEach(transformer -> transformer.transform(keywordValidators, compileContext));
+                .forEach(transformer -> transformer.transform(keywordValidators, compileContext, schemaLocator));
     }
 
     private IValidator schemaOk(ISchemaLocator schemaLocation) {
@@ -137,7 +137,9 @@ public class Compiler {
                 .collect(Collectors.toList());
 
         // Sort compiler for compilation order
-        for (@NonNull ICompileAction compileAction : new ArrayList<>(foundCompilers)) {
+        List<ICompileAction> sortedCompilersResolution = new ArrayList<>(foundCompilers);
+        sortedCompilersResolution.sort(Comparator.comparing(action -> action.compiler().resolveOperationOrderSort()));
+        for (@NonNull ICompileAction compileAction : sortedCompilersResolution) {
             compileAction.compiler().resolveCompilationOrder(foundCompilers, compileContext, locator);
         }
 

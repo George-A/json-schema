@@ -26,7 +26,7 @@ public class Items2019Compiler implements INamedCompiler {
 
     @Override
     public Stream<URI> getVocabularies() {
-        return Stream.of(Defaults.DRAFT_2019_09_APPLICATOR);
+        return Stream.of(Defaults.DRAFT_2019_09_APPLICATOR, Defaults.DRAFT_07_CORE);
     }
 
     @Override
