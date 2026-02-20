@@ -14,3 +14,5 @@
       - Add support for add or redefine custom contentEncoding validator
       - Add support for add or redefine custom contentMediaType validator
    </details>
+
+* **1.2.1** Changed package names to comply with Maven requirements
