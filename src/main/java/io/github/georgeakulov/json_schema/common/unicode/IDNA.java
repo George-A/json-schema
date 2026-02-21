@@ -39,7 +39,7 @@ public class IDNA {
 
     private static Map<String, IntRangeSet> preloadIDNA() {
         Map<String, IntRangeSet> result = new HashMap<>();
-        ParseUtils.forEachLine("IDNA2008Short.txt", line -> {
+        ParseUtils.forEachLine("IDNA2008Short.zz", line -> {
             var parseResult = ParseUtils.parseLine(line);
             if(parseResult != null) {
                 result.put(parseResult.name(), parseResult.rangeSet());

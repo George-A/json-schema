@@ -13,7 +13,7 @@ public class Unicode {
     private static IntRangeSet preloadUnicodeData() {
         IntRangeSet rangeSet = new IntRangeSet();
         ParseUtils.forEachLine(
-                "UnicodeDataShort.txt",
+                "UnicodeDataShort.zz",
                 line -> rangeSet.addAll(ParseUtils.parseNumbers(line))
         );
         return rangeSet;

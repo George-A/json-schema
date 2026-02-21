@@ -32,7 +32,7 @@ public class JoinType {
 
     private static Map<String, IntRangeSet> preloadJoinTypes() {
         Map<String, IntRangeSet> result = new HashMap<>();
-        ParseUtils.forEachLine("DerivedJoiningTypeShort.txt", line -> {
+        ParseUtils.forEachLine("DerivedJoiningTypeShort.zz", line -> {
             var parseResult = ParseUtils.parseLine(line);
             if(parseResult != null) {
                 result.put(parseResult.name(), parseResult.rangeSet());

@@ -41,7 +41,7 @@ public class Scripts {
                 Function.identity()
         ));
         EnumMap<EScript, IntRangeSet> result = new EnumMap<>(EScript.class);
-        ParseUtils.forEachLine("ScriptsShort.txt", line -> {
+        ParseUtils.forEachLine("ScriptsShort.zz", line -> {
             var parseResult = ParseUtils.parseLine(line);
             if(parseResult != null) {
                 var script = reverse.get(parseResult.name());

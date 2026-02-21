@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.zip.InflaterInputStream;
 
 class ParseUtils {
 
@@ -15,7 +16,9 @@ class ParseUtils {
         try {
 
             var cl = Thread.currentThread().getContextClassLoader();
-            try(var is = new BufferedReader(new InputStreamReader(Objects.requireNonNull(cl.getResourceAsStream(resourceName))))){
+            try(var is = new BufferedReader(new InputStreamReader(
+                    new InflaterInputStream(Objects.requireNonNull(cl.getResourceAsStream(resourceName)))
+            ))){
                 // Skip first line as title
                 var line = is.readLine();
                 while(line != null) {
